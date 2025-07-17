@@ -1,0 +1,41 @@
+class Solution {
+public:
+    int findNext(vector<int>& arr, int val) {
+        int low = 0, high = arr.size() - 1;
+        int ans = -1;
+        while (low <= high) {
+            int mid = (low + high) >> 1;
+            if (arr[mid] > val) {
+                ans = arr[mid];
+                high = mid - 1;
+            } else
+                low = mid + 1;
+        }
+        return ans;
+    }
+
+    int helper(vector<vector<int>>& modList, int prev, int index, int target, int k) {
+        int next = (target - prev + k) % k;
+        int nextIndex = findNext(modList[next], index);
+        if (nextIndex == -1)
+            return 1;
+        return 1 + helper(modList, next, nextIndex, target, k);
+    }
+
+    int maximumLength(vector<int>& nums, int k) {
+        vector<vector<int>> modList(k);
+        int n = nums.size();
+        for (int i = 0; i < n; i++) {
+            modList[nums[i] % k].push_back(i);
+        }
+        int ans = 0;
+        for (int target = 0; target < k; target++) {
+            for (int startMod = 0; startMod < k; startMod++) {
+                if (!modList[startMod].empty()) {
+                    ans = max(ans, helper(modList, startMod, modList[startMod][0], target, k));
+                }
+            }
+        }
+        return ans;
+    }
+};
