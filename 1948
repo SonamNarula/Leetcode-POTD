@@ -1,0 +1,86 @@
+struct Node{
+    map<string, Node*> ch;
+    bool mark;
+    Node(): mark(false){}
+};
+
+class Solution {
+    int md = 1e9 + 7;
+    int n =  2*1e5+1;
+    vector<long long> p_pow;
+    unordered_map<int, Node*> vis;
+    Node* root;
+    vector<vector<string>> res;
+    vector<string> path;
+public:
+    int calc_hash(const string &s){
+        long long hash = 0;
+        for(int i=0;i<s.size();i++){
+            hash = (hash + (s[i]-'a'+1)*p_pow[n-i-1])%md;
+        }
+        return hash;
+    }
+
+    void add_path(vector<string>& path){
+        Node* ptr = root;
+        for(int i=0;i<path.size();i++){
+            if(ptr->ch.find(path[i]) == ptr->ch.end()){
+                ptr->ch[path[i]] = new Node();
+            }
+            ptr = ptr->ch[path[i]];
+        }
+    }
+
+    void make_tree(vector<vector<string>>& paths){
+        for(int i=0;i<paths.size();i++){
+            add_path(paths[i]);
+        }
+    }
+
+    long long solve(Node* root){
+        if(root->ch.empty())return 0;
+        string hash_str;
+        for(const auto& [name, value]:root->ch){
+            long long chash = solve(value);
+            hash_str += (name + "(" + to_string(chash) + ")");
+        }
+        long long hash = calc_hash(hash_str);
+
+        if(vis.find(hash)!=vis.end()){
+            vis[hash]->mark = true;
+            root->mark = true;
+        }
+        else vis[hash] = root;
+        return hash;
+    }
+
+    void calc_res(Node* root){
+        for(const auto& [name, node]:root->ch){
+            if(node->mark)continue;
+            path.push_back(name);
+            res.push_back(path);
+            calc_res(node);
+            path.pop_back();
+        }
+    }
+    vector<vector<string>> deleteDuplicateFolder(vector<vector<string>>& paths) {
+        p_pow = vector<long long>(n);
+        p_pow[0] = 1;
+        int p = 31;
+        for(int i=1;i<n;i++)p_pow[i] = (p_pow[i-1]*p)%md;
+        root = new Node();
+        make_tree(paths);
+        solve(root);
+        calc_res(root);
+        return res;
+    }
+};
+
+/*
+[["a"],["c"],["d"],["a","b"],["c","b"],["d","a"]]
+[["a"],["c"],["a","b"],["c","b"],["a","b","x"],["a","b","x","y"],["w"],["w","y"]]
+[["a","b"],["c","d"],["c"],["a"]]
+[["a","b"],["c","d"],["c"],["a"]]
+[["a"],["a","b"],["a","b","c"],["a","b","c","d"],["f"],["f","b"],["f","b","c"],["f","b","c","d"], ["g"],["g","e"],["g","e","c","d"],["g","e","c"]]
+[["a"],["a","b"],["a","b","c"],["a","b","e"],["d"],["d","b"],["d","b","c"]]
+*/
